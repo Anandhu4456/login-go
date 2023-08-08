@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login page</title>
+</head>
+<body>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        body{
+            background-color: aqua;
+        }
+        input{
+            border:1px solid grey;
+            height: 50px;
+            width: 300px;
+            border-radius: 15px;
+        }
+        h2{
+            position: relative;
+            left: 95px;
+        }
+        form{
+            position: absolute;
+            top: 40%;
+            left: 40%;        
+        }
+        .uname{
+            margin-top: 5px;
+        }
+        .pword{
+            margin-top: 5px;
+        }
+        .btn{
+            background-color: rgb(6, 243, 26);
+            margin-top: 7px;
+            position: relative;
+            border: none;
+            height: 40px;
+            width: 150px;
+            cursor: pointer;
+        }
+        form a{
+            font-size: larger;
+            margin-left: 20px;
+            text-decoration: none;
+            
+            
+        }
+    </style>
+
+    <form action="/home" method="POST">
+        <h2>Lets Login</h2>
+        <div class="uname">
+            <label for="username"></label>
+            <input type="text" name="username" placeholder="username" required >
+        </div>
+        <div class="pword">
+            <label for="password"></label>
+            <input type="password" name="password" placeholder="password" required>
+        </div>
+        <input type="submit" value="Login" class="btn"></input>
+        <a href="/signup" type="button"> sign-up</a>
+        
+    </form>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign up</title>
+</head>
+<body>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: whitesmoke;
+        }
+        .form{
+            position: absolute;
+            top: 35%;
+            left: 40%;
+            border-radius: 15px;
+        }
+        input{
+            margin-top: 5px;
+            height: 50px;
+            width: 300px;
+        }
+        button{
+            margin-top: 6px;
+            height: 30px;
+            background-color: lightgreen;
+        }
+    </style>
+    <div class="form">
+        <h2>Register Now..</h2>
+    
+        <form action="/home" method="POST">
+            <div>
+                <label for="name"></label>
+                <input type="text" name="name" placeholder="Name" required>
+            </div>
+    
+            <div>
+                <label for="username"></label>
+                <input type="email" name="username" placeholder="username/email" required>
+            </div>
+    
+            <div>
+                <label for="password"></label>
+                <input type="password" name="password" placeholder="password" required>
+            </div>
+    
+            <input type="submit" value="sign-up">
+    
+        </form>
+    </div>
+</body>
+</html>

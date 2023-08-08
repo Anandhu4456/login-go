@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home page</title>
+</head>
+<body>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: whitesmoke;
+        }
+        .h-content{
+            position: absolute;
+            left: 35%;
+            top: 40%;
+        }
+        button{
+            margin-top: 5px;
+            background-color: rgb(233, 106, 106);
+        }
+    </style>
+    <div class="h-content">
+        <h2>This is the Home Page</h2>
+        <p>Welcome {{.Name}}</p>
+        <p>You are succesfully logged-In... You have now an active session until you logout..enjoy</p>
+    
+        <a href="/login" type="button" value="logout">Logout</a>
+    </div>
+    
+</body>
+</html>
