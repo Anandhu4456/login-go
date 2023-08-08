@@ -18,6 +18,12 @@ type user struct {
 	UserName string
 	Password string
 }
+type errors struct {
+	UserNErr string
+	PassErr  string
+}
+
+var errorval errors
 
 func init() {
 	tmpl = template.Must(template.ParseGlob("Templates/*"))
@@ -29,6 +35,7 @@ func main() {
 	http.HandleFunc("/", loginHandler)
 	http.HandleFunc("/signup", signupHandler)
 	http.HandleFunc("/home", homeHandler)
+	http.HandleFunc("/logout", logoutHandler)
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
@@ -48,13 +55,17 @@ func loginHandler(w http.ResponseWriter, req *http.Request) {
 		pass := req.FormValue("password")
 
 		if _, ok := dbUsers[uname]; !ok {
-			http.Error(w, "username does not match", http.StatusForbidden)
+			errorval.UserNErr = "username error"
+			http.Redirect(w, req, "/", http.StatusSeeOther)
 			return
 		}
 		if pass != dbUsers[uname].Password {
-			http.Error(w, "password does not match", http.StatusForbidden)
+			errorval.PassErr = "password error"
+			http.Redirect(w, req, "/", http.StatusSeeOther)
 			return
 		}
+		errorval.UserNErr = ""
+		errorval.PassErr = ""
 
 		if pass == dbUsers[uname].Password {
 
@@ -71,7 +82,7 @@ func loginHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	tmpl.ExecuteTemplate(w, "login.html", nil)
+	tmpl.ExecuteTemplate(w, "login.html", errorval)
 }
 
 // signupHandler function
@@ -92,7 +103,8 @@ func signupHandler(w http.ResponseWriter, req *http.Request) {
 
 		// check username already taken?
 		if _, ok := dbUsers[uname]; ok {
-			http.Error(w, "username already taken", http.StatusForbidden)
+			errorval.UserNErr = "username already taken"
+			http.Redirect(w, req, "/", http.StatusSeeOther)
 			return
 		}
 		// store user in dbUsers
@@ -109,7 +121,7 @@ func signupHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	tmpl.ExecuteTemplate(w, "signup.html", nil)
+	tmpl.ExecuteTemplate(w, "signup.html", errorval)
 }
 
 // homeHandler function
@@ -117,10 +129,14 @@ func signupHandler(w http.ResponseWriter, req *http.Request) {
 func homeHandler(w http.ResponseWriter, req *http.Request) {
 	cookie, err := req.Cookie("session")
 	if err != nil {
+		errorval.UserNErr = ""
+		errorval.PassErr = ""
 		http.Redirect(w, req, "/", http.StatusSeeOther)
 		return
 	}
 	if _, ok := dbSessions[cookie.Value]; !ok {
+		errorval.UserNErr = ""
+		errorval.PassErr = ""
 		http.Redirect(w, req, "/", http.StatusSeeOther)
 		return
 	}
@@ -131,4 +147,30 @@ func homeHandler(w http.ResponseWriter, req *http.Request) {
 	usr = dbUsers[un]
 
 	tmpl.ExecuteTemplate(w, "home.html", usr)
+}
+
+// logoutHandler function
+
+func logoutHandler(w http.ResponseWriter, req *http.Request) {
+	cookie, err := req.Cookie("session")
+	if err != nil {
+		http.Redirect(w, req, "/", http.StatusSeeOther)
+		errorval.UserNErr = ""
+		errorval.PassErr = ""
+		return
+	}
+	if _, ok := dbSessions[cookie.Value]; !ok {
+		http.Redirect(w, req, "/", http.StatusSeeOther)
+		errorval.UserNErr = ""
+		errorval.PassErr = ""
+		return
+	}
+	cookie.MaxAge = -1
+	dbSessions[cookie.Value] = ""
+	http.SetCookie(w, cookie)
+
+	http.Redirect(w, req, "/", http.StatusSeeOther)
+	errorval.UserNErr = ""
+	errorval.PassErr = ""
+	
 }

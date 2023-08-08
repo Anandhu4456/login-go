@@ -38,16 +38,19 @@
                 <label for="name"></label>
                 <input type="text" name="name" placeholder="Name" required>
             </div>
+            
     
             <div>
                 <label for="username"></label>
                 <input type="email" name="username" placeholder="username/email" required>
             </div>
+            <h4>{{.UserNErr}}</h4>
     
             <div>
                 <label for="password"></label>
                 <input type="password" name="password" placeholder="password" required>
             </div>
+            <h4>{{.PassErr}}</h4>
     
             <input type="submit" value="sign-up">
     
