@@ -27,6 +27,7 @@ func init() {
 func main() {
 	fmt.Printf("server running on port: 3000")
 	http.HandleFunc("/", loginHandler)
+	http.HandleFunc("/signup",signupHandler)
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
@@ -64,10 +65,47 @@ func loginHandler(w http.ResponseWriter, req *http.Request) {
 				Value: uid,
 			}
 			http.SetCookie(w, cookie)
+			dbSessions[cookie.Value]=uname
 			http.Redirect(w, req, "/home", http.StatusSeeOther)
 			return
 		}
 	}
-
 	tmpl.ExecuteTemplate(w, "login.html", nil)
+}
+// signupHandler function
+
+func signupHandler(w http.ResponseWriter , req *http.Request){
+	cookie,err:=req.Cookie("session")
+
+	if err == nil{
+		if _,ok:= dbSessions[cookie.Value];ok{
+			http.Redirect(w,req,"/home",http.StatusSeeOther)
+		}
+	}
+	if req.Method == http.MethodPost{
+
+		name:=req.FormValue("name")
+		uname:=req.FormValue("username")
+		pass:=req.FormValue("password")
+
+		// check username already taken?
+		if _,ok:=dbUsers[uname];ok{
+			http.Error(w,"username already taken",http.StatusForbidden)
+			return
+		}
+		// store user in dbUsers
+		dbUsers[uname]=user{name,uname,pass}
+		uid:=uuid.NewString()
+		cookie = &http.Cookie{
+			Name:"session",
+			Value:uid,
+		}
+		http.SetCookie(w,cookie)
+		dbSessions[cookie.Value]=uname
+
+		http.Redirect(w,req,"/home",http.StatusSeeOther)
+		return
+	}
+
+	tmpl.ExecuteTemplate(w,"signup.html",nil)
 }
