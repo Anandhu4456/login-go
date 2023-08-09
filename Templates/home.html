@@ -25,10 +25,12 @@
     </style>
     <div class="h-content">
         <h2>This is the Home Page</h2>
+        {{if .Username}}
         <p>Welcome {{.Name}}</p>
+        {{end}}
         <p>You are succesfully logged-In... You have now an active session until you logout..enjoy</p>
     
-        <a href="/login" type="button" value="logout">Logout</a>
+        <a href="/logout" type="button" value="logout">Logout</a>
     </div>
     
 </body>

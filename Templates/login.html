@@ -54,20 +54,20 @@
         }
     </style>
 
-    <form action="/home" method="POST">
+    <form method="POST">
         <h2>Lets Login</h2>
         <div class="uname">
             <label for="username"></label>
             <input type="text" name="username" placeholder="username" required >            
         </div>
-        <h4>{{.UserNErr}}</h4>
+        <h4>{{.EmailError}}</h4>
 
         <div class="pword">
             <label for="password"></label>
             <input type="password" name="password" placeholder="password" required>
         </div>
 
-        <h4> {{.PassErr}}</h4>
+        <h4> {{.PasswordError}}</h4>
         <input type="submit" value="Login" class="btn"></input>
         <a href="/signup" type="button"> sign-up</a>
         

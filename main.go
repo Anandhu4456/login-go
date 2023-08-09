@@ -3,174 +3,187 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 
-	"github.com/google/uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
-var tmpl *template.Template
-var dbSessions = make(map[string]string)
-var dbUsers = make(map[string]user)
-
-type user struct {
+type users struct {
 	Name     string
-	UserName string
+	Username string
 	Password string
 }
-type errors struct {
-	UserNErr string
-	PassErr  string
+
+var dbUsers = make(map[string]users)
+var dbSession = make(map[string]string)
+
+type errorBase struct {
+	EmailError    string
+	NameError     string
+	PasswordError string
 }
 
-var errorval errors
+var errorV errorBase
+
+var tpl *template.Template
 
 func init() {
-	tmpl = template.Must(template.ParseGlob("Templates/*"))
-	dbUsers["anan@gmail.com"] = user{"anandhu", "anan@gmail.com", "123"}
+	tpl = template.Must(template.ParseGlob("Templates/*"))
+	dbUsers["anan@gmail.com"] = users{"Anandhu", "anan@gmail.com", "123"}
+	dbUsers["vin@gmail.com"] = users{"vinay", "vin@gmail.com", "1234"}
+	dbUsers["az@gmail.com"] = users{"azad", "az@gmail.com", "12345"}
+
 }
 
 func main() {
-	fmt.Printf("server running on port: 3000")
-	http.HandleFunc("/", loginHandler)
-	http.HandleFunc("/signup", signupHandler)
-	http.HandleFunc("/home", homeHandler)
-	http.HandleFunc("/logout", logoutHandler)
-	log.Fatal(http.ListenAndServe(":3000", nil))
+	fmt.Printf("server running on port:8080")
+	http.HandleFunc("/", login)
+	http.HandleFunc("/home", home)
+	http.HandleFunc("/signup", signup)
+	http.HandleFunc("/logout", logout)
+	http.ListenAndServe(":8080", nil)
+
 }
 
-// loginHandler function
+// LoginHandler function
 
-func loginHandler(w http.ResponseWriter, req *http.Request) {
-	cookie, err := req.Cookie("session")
-
+func login(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	cookies, err := req.Cookie("session")
 	if err == nil {
-		if _, ok := dbSessions[cookie.Value]; ok {
+		if _, ok := dbSession[cookies.Value]; ok {
 			http.Redirect(w, req, "/home", http.StatusSeeOther)
 		}
 	}
-	if req.Method == http.MethodPost {
 
-		uname := req.FormValue("username")
-		pass := req.FormValue("password")
+	if req.Method == "POST" {
+		username := req.FormValue("username")
+		password := req.FormValue("password")
 
-		if _, ok := dbUsers[uname]; !ok {
-			errorval.UserNErr = "username error"
-			http.Redirect(w, req, "/", http.StatusSeeOther)
+		if _, ok := dbUsers[username]; !ok {
+			errorV.EmailError = "email error"
+			http.Redirect(w, req, "/login", http.StatusSeeOther)
 			return
 		}
-		if pass != dbUsers[uname].Password {
-			errorval.PassErr = "password error"
-			http.Redirect(w, req, "/", http.StatusSeeOther)
+
+		if password != dbUsers[username].Password {
+			errorV.PasswordError = "password error"
+			http.Redirect(w, req, "/login", http.StatusSeeOther)
 			return
 		}
-		errorval.UserNErr = ""
-		errorval.PassErr = ""
+		errorV.EmailError = ""
+		errorV.PasswordError = ""
+		if password == dbUsers[username].Password {
+			// creating cookie
 
-		if pass == dbUsers[uname].Password {
-
-			// create cookie
-
-			uid := uuid.NewString()
-			cookie = &http.Cookie{
+			uid := uuid.NewV4()
+			cookie := &http.Cookie{
 				Name:  "session",
-				Value: uid,
+				Value: uid.String(),
 			}
 			http.SetCookie(w, cookie)
-			dbSessions[cookie.Value] = uname
+			dbSession[cookie.Value] = username
+
 			http.Redirect(w, req, "/home", http.StatusSeeOther)
 			return
 		}
+
 	}
-	tmpl.ExecuteTemplate(w, "login.html", errorval)
+	tpl.ExecuteTemplate(w, "login.html", errorV)
+
 }
 
 // signupHandler function
 
-func signupHandler(w http.ResponseWriter, req *http.Request) {
-	cookie, err := req.Cookie("session")
-
+func signup(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	cookies, err := req.Cookie("session")
 	if err == nil {
-		if _, ok := dbSessions[cookie.Value]; ok {
+		if _, ok := dbSession[cookies.Value]; ok {
 			http.Redirect(w, req, "/home", http.StatusSeeOther)
 		}
 	}
-	if req.Method == http.MethodPost {
 
+	if req.Method == "POST" {
 		name := req.FormValue("name")
-		uname := req.FormValue("username")
-		pass := req.FormValue("password")
+		username := req.FormValue("username")
+		password := req.FormValue("password")
 
-		// check username already taken?
-		if _, ok := dbUsers[uname]; ok {
-			errorval.UserNErr = "username already taken"
-			http.Redirect(w, req, "/", http.StatusSeeOther)
+		// check username already taken ?
+
+		if _, ok := dbUsers[username]; ok {
+			errorV.EmailError = "email already taken"
+			http.Redirect(w, req, "/signup", http.StatusSeeOther)
 			return
 		}
-		// store user in dbUsers
-		dbUsers[uname] = user{name, uname, pass}
-		uid := uuid.NewString()
-		cookie = &http.Cookie{
+
+		errorV.EmailError = ""
+		// storing new user to dbUsers
+
+		dbUsers[username] = users{name, username, password}
+		uid := uuid.NewV4()
+		cookie := &http.Cookie{
 			Name:  "session",
-			Value: uid,
+			Value: uid.String(),
 		}
+
 		http.SetCookie(w, cookie)
-		dbSessions[cookie.Value] = uname
+		dbSession[cookie.Value] = username
 
 		http.Redirect(w, req, "/home", http.StatusSeeOther)
-		return
 	}
-
-	tmpl.ExecuteTemplate(w, "signup.html", errorval)
+	tpl.ExecuteTemplate(w, "signup.html", errorV)
 }
 
-// homeHandler function
+func home(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
-func homeHandler(w http.ResponseWriter, req *http.Request) {
 	cookie, err := req.Cookie("session")
+
 	if err != nil {
-		errorval.UserNErr = ""
-		errorval.PassErr = ""
 		http.Redirect(w, req, "/", http.StatusSeeOther)
+		errorV.EmailError = ""
+		errorV.PasswordError = ""
 		return
 	}
-	if _, ok := dbSessions[cookie.Value]; !ok {
-		errorval.UserNErr = ""
-		errorval.PassErr = ""
+
+	if _, ok := dbSession[cookie.Value]; !ok {
 		http.Redirect(w, req, "/", http.StatusSeeOther)
+		errorV.EmailError = ""
+		errorV.PasswordError = ""
 		return
 	}
 	var un string
-	var usr user
-
-	un = dbSessions[cookie.Value]
+	var usr users
+	un = dbSession[cookie.Value]
 	usr = dbUsers[un]
 
-	tmpl.ExecuteTemplate(w, "home.html", usr)
+	tpl.ExecuteTemplate(w, "home.html", usr)
 }
 
-// logoutHandler function
-
-func logoutHandler(w http.ResponseWriter, req *http.Request) {
+func logout(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	cookie, err := req.Cookie("session")
 	if err != nil {
 		http.Redirect(w, req, "/", http.StatusSeeOther)
-		errorval.UserNErr = ""
-		errorval.PassErr = ""
+		errorV.EmailError = ""
+		errorV.PasswordError = ""
 		return
 	}
-	if _, ok := dbSessions[cookie.Value]; !ok {
+
+	if _, ok := dbSession[cookie.Value]; !ok {
 		http.Redirect(w, req, "/", http.StatusSeeOther)
-		errorval.UserNErr = ""
-		errorval.PassErr = ""
+		errorV.EmailError = ""
+		errorV.PasswordError = ""
 		return
 	}
+	// cookie deleting
 	cookie.MaxAge = -1
-	dbSessions[cookie.Value] = ""
+	dbSession[cookie.Value] = ""
 	http.SetCookie(w, cookie)
 
 	http.Redirect(w, req, "/", http.StatusSeeOther)
-	errorval.UserNErr = ""
-	errorval.PassErr = ""
-	
+	errorV.EmailError = ""
+	errorV.PasswordError = ""
+
 }
